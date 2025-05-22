@@ -1,3 +1,4 @@
+#include <netinet/in.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -27,7 +28,49 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
 }	
 
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
+    if(fd == -1){
+        printf("File Descriptor is corrupted.\n");
+        return STATUS_ERROR;
+    }
+    struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
+    if(header == NULL){
+        printf("Calloc didn't work for the header file, check.\n");
+        return STATUS_ERROR;
+    }
 
+    if(read(fd, header, sizeof(struct dbheader_t)) != sizeof(struct dbheader_t)){
+        perror("read");
+        free(header);
+        return STATUS_ERROR;
+    }
+
+    header->version = ntohs(header->version);
+    header->count = ntohs(header->count);
+    header->filesize = ntohs(header->filesize);
+    header->magic = ntohl(header->magic);
+
+    if(header->version != 1){
+        free(header);
+        printf("Header version is improper.\n");
+        return STATUS_ERROR;
+    }
+    if(header->magic != HEADER_MAGIC){
+        free(header);
+        printf("Header magic is not accurate.\n");
+        return STATUS_ERROR;
+    }
+
+    struct stat db_stat = {0};
+
+    fstat(fd, &db_stat);
+    if(header->filesize != db_stat.st_size){
+        free(header);
+        printf("Corrupted file. Different filesize.\n");
+        return STATUS_ERROR;
+    }
+    
+
+    
 }
 
 int create_db_header(int fd, struct dbheader_t **headerOut) {
