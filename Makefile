@@ -3,7 +3,8 @@ SRC = $(wildcard src/*.c)
 OBJ = $(patsubst src/%.c, obj/%.o, $(SRC))
 
 run: clean default
-	./$(TARGET)
+	./$(TARGET) -f my_db -n
+	./$(TARGET) -f my_db
 
 default: $(TARGET)
 

@@ -20,6 +20,8 @@ int main(int argc, char *argv[]) {
 	int c = 0;
     bool newfile = false;
     char *file_path = NULL;
+    int dbfd = -1;
+    struct dbheader_t *headerOut = NULL; 
     while((c = getopt(argc, argv, "nf:") )!= -1){
         switch (c){
             case 'n':
@@ -41,6 +43,28 @@ int main(int argc, char *argv[]) {
         print_usage(argv);
         return 0;
     }
+
+    if(newfile){
+        dbfd = create_db_file(file_path);
+        if(dbfd == STATUS_ERROR){
+            printf("Unable to create database file.\n");
+            return -1;
+        }
+        int header_create = create_db_header(dbfd, &headerOut);
+        if(header_create == STATUS_ERROR){
+            printf("Was not able to create the header.\n");
+            return -1;
+        }
+    }else{
+        dbfd = open_db_file(file_path);
+        if(dbfd == STATUS_ERROR){
+            printf("Unable to open database file.\n");
+            return -1;
+        }
+    }
+
+
+
     printf("newfile : %d\n", newfile);
     printf("file_path: %s\n", file_path);
     return 0;

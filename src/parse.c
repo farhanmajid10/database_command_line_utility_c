@@ -31,7 +31,19 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 }
 
 int create_db_header(int fd, struct dbheader_t **headerOut) {
-	
+    struct dbheader_t *header = calloc(1, sizeof(struct dbheader_t));
+    if(header == NULL){
+        printf("Calloc did not work to create dbheader.\n");
+        return STATUS_ERROR;
+    }
+
+    header->magic = HEADER_MAGIC;
+    header->version = 1;
+    header->count = 0;
+    header->filesize = sizeof(struct dbheader_t);
+    *headerOut = header;
+
+    return STATUS_SUCCESS;
 }
 
 
