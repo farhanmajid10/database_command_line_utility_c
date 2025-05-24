@@ -16,11 +16,44 @@ void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {
 }
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
+    
+    printf("%s\n",addstring);
 
+    char *name = strtok(addstring, ",");
+    char *address = strtok(NULL, ",");
+    char *hours = strtok(NULL, ",");
+
+    strncpy(employees[dbhdr->count - 1].name, name, sizeof(employees[dbhdr->count - 1].name));
+    strncpy(employees[dbhdr->count - 1].address, address, sizeof(employees[dbhdr->count - 1].address));
+
+    employees[dbhdr->count - 1].hours = atoi(hours);
+
+    printf("%s:%s:%d\n",employees[dbhdr->count - 1].name, employees[dbhdr->count - 1].address, employees[dbhdr->count - 1].hours);
+
+    return STATUS_SUCCESS;
 }
 
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+    if(fd < 0){
+        printf("Corrupt file descriptor for reading employees\n");
+        return STATUS_ERROR;
+    }
+    struct employee_t *employees = calloc(0, sizeof(struct employee_t));
+    if(employees == NULL){
+        printf("Calloc failed in read_employees.\n");
+        return STATUS_ERROR;
+    }
+    int num_of_employees = dbhdr->count;
 
+    read(fd, employees, sizeof(struct employee_t) * num_of_employees);
+    
+    for(int i = 0; i < num_of_employees; i++){
+        employees[i].hours = ntohl(employees[i].hours);
+    }
+    
+    *employeesOut = employees;
+
+    return STATUS_SUCCESS;
 }
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {

@@ -9,9 +9,7 @@
 #include "common.h"
 #include "file.h"
 #include "parse.h"
-//git_hunk check.
 
-//aermretne
 void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <file_path>\n", argv[0]);
     printf("\t-n : create new database file.\n");
@@ -24,15 +22,21 @@ int main(int argc, char *argv[]) {
     bool newfile = false;
     char *file_path = NULL;
     int dbfd = -1;
+    struct employee_t *employees;
+    struct employee_t *employeesOut;
+    char *employee_string = NULL;
 
     struct dbheader_t *headerOut = NULL; 
-    while((c = getopt(argc, argv, "nf:") )!= -1){
+    while((c = getopt(argc, argv, "nf:a:") )!= -1){
         switch (c){
             case 'n':
                 newfile = true;
                 break;
             case 'f':
                 file_path = optarg;
+                break;
+            case 'a':
+                employee_string = optarg;
                 break;
             case '?':
                 printf("-%s is unkown option\n", optarg);
@@ -71,21 +75,26 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    struct employee_t *employees;
+    if(read_employees(dbfd, headerOut, &employeesOut)){
+        printf("Reading employees failed. \n");
+        return -1;
+    }
+
+    if(employee_string){
+        employeesOut = realloc(employeesOut, ++headerOut->count*sizeof(struct employee_t));
+        if(employeesOut == NULL){
+            printf("Realloc for adding employee_failed.\n");
+            return STATUS_ERROR;
+        }
+        add_employee(headerOut, employeesOut, employee_string);
+    }
+    
     output_file(dbfd,headerOut,employees);
 
     printf("newfile : %d\n", newfile);
     printf("file_path: %s\n", file_path);
     return 0;
 }
-
-void some_function(char *argv[]) {
-    printf("Usage: %s -n -f <file_path>\n", argv[0]);
-    printf("\t-n : create new database file.\n");
-    printf("\t-f : (required) path to database file.\n");
-    return;
-}
-
 
 
 /*
