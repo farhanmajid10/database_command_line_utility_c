@@ -3,12 +3,15 @@
 #include <getopt.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include <sys/select.h>
 #include <unistd.h>
 
 #include "common.h"
 #include "file.h"
 #include "parse.h"
+//git_hunk check.
 
+//aermretne
 void print_usage(char *argv[]) {
     printf("Usage: %s -n -f <file_path>\n", argv[0]);
     printf("\t-n : create new database file.\n");
@@ -21,6 +24,7 @@ int main(int argc, char *argv[]) {
     bool newfile = false;
     char *file_path = NULL;
     int dbfd = -1;
+
     struct dbheader_t *headerOut = NULL; 
     while((c = getopt(argc, argv, "nf:") )!= -1){
         switch (c){
@@ -67,13 +71,23 @@ int main(int argc, char *argv[]) {
         }
     }
 
-
+    struct employee_t *employees;
+    output_file(dbfd,headerOut,employees);
 
     printf("newfile : %d\n", newfile);
     printf("file_path: %s\n", file_path);
     return 0;
-
 }
+
+void some_function(char *argv[]) {
+    printf("Usage: %s -n -f <file_path>\n", argv[0]);
+    printf("\t-n : create new database file.\n");
+    printf("\t-f : (required) path to database file.\n");
+    return;
+}
+
+
+
 /*
 * main function and some utility functions are going to be in this file.
 */

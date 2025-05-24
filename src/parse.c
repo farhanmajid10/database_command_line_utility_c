@@ -24,7 +24,19 @@ int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employe
 }
 
 int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) {
+    if(fd < 0){
+        printf("Corrupted file descriptor.\n");
+        return STATUS_ERROR;
+    }
+    dbhdr->count = htons(dbhdr->count);
+    dbhdr->filesize = htonl(dbhdr->filesize);
+    dbhdr->magic = htonl(dbhdr->magic);
+    dbhdr->version = htons(dbhdr->version);
 
+    lseek(fd, 0, SEEK_SET);
+
+    write(fd, dbhdr, sizeof(struct dbheader_t));
+    return STATUS_SUCCESS;
 }	
 
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
@@ -46,7 +58,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
 
     header->version = ntohs(header->version);
     header->count = ntohs(header->count);
-    header->filesize = ntohs(header->filesize);
+    header->filesize = ntohl(header->filesize);
     header->magic = ntohl(header->magic);
 
     if(header->version != 1){
@@ -68,9 +80,7 @@ int validate_db_header(int fd, struct dbheader_t **headerOut) {
         printf("Corrupted file. Different filesize.\n");
         return STATUS_ERROR;
     }
-    
-
-    
+    *headerOut = header;
 }
 
 int create_db_header(int fd, struct dbheader_t **headerOut) {
