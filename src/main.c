@@ -75,13 +75,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    if(read_employees(dbfd, headerOut, &employeesOut)){
+    if(read_employees(dbfd, headerOut, &employeesOut) != STATUS_SUCCESS){
         printf("Reading employees failed. \n");
         return -1;
     }
 
     if(employee_string){
-        employeesOut = realloc(employeesOut, ++headerOut->count*sizeof(struct employee_t));
+        headerOut->count++;
+        employeesOut = realloc(employeesOut, headerOut->count*(sizeof(struct employee_t)));
         if(employeesOut == NULL){
             printf("Realloc for adding employee_failed.\n");
             return STATUS_ERROR;
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
         add_employee(headerOut, employeesOut, employee_string);
     }
     
-    output_file(dbfd,headerOut,employees);
+    output_file(dbfd,headerOut,employeesOut);
 
     printf("newfile : %d\n", newfile);
     printf("file_path: %s\n", file_path);

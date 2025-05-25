@@ -34,16 +34,17 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
 }
 
 int read_employees(int fd, struct dbheader_t *dbhdr, struct employee_t **employeesOut) {
+    
+    int num_of_employees = dbhdr->count;
     if(fd < 0){
         printf("Corrupt file descriptor for reading employees\n");
         return STATUS_ERROR;
     }
-    struct employee_t *employees = calloc(0, sizeof(struct employee_t));
+    struct employee_t *employees = calloc(num_of_employees, sizeof(struct employee_t));
     if(employees == NULL){
         printf("Calloc failed in read_employees.\n");
         return STATUS_ERROR;
     }
-    int num_of_employees = dbhdr->count;
 
     read(fd, employees, sizeof(struct employee_t) * num_of_employees);
     
@@ -61,15 +62,25 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
         printf("Corrupted file descriptor.\n");
         return STATUS_ERROR;
     }
+
+    int real_count = dbhdr->count;
+
     dbhdr->count = htons(dbhdr->count);
-    dbhdr->filesize = htonl(dbhdr->filesize);
+    dbhdr->filesize = htonl(sizeof(struct dbheader_t) + (sizeof(struct employee_t)*real_count));
     dbhdr->magic = htonl(dbhdr->magic);
     dbhdr->version = htons(dbhdr->version);
 
     lseek(fd, 0, SEEK_SET);
 
     write(fd, dbhdr, sizeof(struct dbheader_t));
+
+    for(int i = 0; i < real_count; i++){
+        employees[i].hours = htonl(employees[i].hours);
+        write(fd,&employees[i], sizeof(struct employee_t));
+    }
+
     return STATUS_SUCCESS;
+//    return STATUS_SUCCESS;
 }	
 
 int validate_db_header(int fd, struct dbheader_t **headerOut) {
