@@ -11,8 +11,68 @@
 #include "common.h"
 #include "parse.h"
 
-void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {
 
+int employee_hour_change(struct dbheader_t *dbhdr, struct employee_t *employees, char *new_hours){
+    char *name = strtok(new_hours, ",");
+    char *updated_hours = strtok(NULL, ",");
+
+    int employee_index = -1;
+
+    for(int i = 0; i < dbhdr->count;i++){
+        if(strncmp(employees[i].name, name, strlen(employees[i].name)) == 0 && strncmp(employees[i].name, name, strlen(name)) == 0){
+            employee_index = i;
+            break;
+        }
+    }
+    if(employee_index != -1){
+    employees[employee_index].hours = atoi(updated_hours);
+    return STATUS_SUCCESS;
+    }
+    printf("Employee not found in the database.\n"); 
+    return STATUS_ERROR;
+}
+
+int remove_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *removestring){
+    int num_of_employees = dbhdr->count;
+    int eid_cursor = -1;
+    for(int i = 0; i < num_of_employees;i++){
+        if(strncmp(employees[i].name, removestring, strlen(employees[i].name)) == 0 && strncmp(employees[i].name, removestring, strlen(removestring)) == 0){
+            eid_cursor = i;
+            break;
+        }
+    }
+    if(eid_cursor != -1){
+        if(num_of_employees == 1){
+            return 1;
+        }else{
+           strncpy(employees[eid_cursor].name, employees[dbhdr->count - 1].name, sizeof(employees[eid_cursor].name)); 
+
+           strncpy(employees[eid_cursor].address, employees[dbhdr->count - 1].address, sizeof(employees[eid_cursor].address)); 
+            employees[eid_cursor].hours = employees[dbhdr->count - 1].hours; 
+            return 2;
+       }
+    }
+        return 0;
+}
+
+int search_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *removestring){
+    int num_of_employees = dbhdr->count;
+    for(int i = 0;i < num_of_employees; i++){
+        if(strncmp(employees[i].name,removestring,strlen(employees[i].name))==0){
+            printf("Name: %s, address: %s, hours: %d\n",employees[i].name, employees[i].address, employees[i].hours);
+        }
+    }
+    return 0;
+}
+
+void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees) {
+    printf("Number of employees: %d\n", dbhdr->count);
+    for( int i = 0; i < dbhdr->count; i++){
+        printf("Employee %d\n",i);
+        printf("\tEmployee Name: %s\n", employees[i].name);
+        printf("\tEmployee Address: %s\n", employees[i].address);
+        printf("\tEmployee Hours: %d\n", employees[i].hours);
+    }
 }
 
 int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring) {
@@ -28,7 +88,7 @@ int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *a
 
     employees[dbhdr->count - 1].hours = atoi(hours);
 
-    printf("%s:%s:%d\n",employees[dbhdr->count - 1].name, employees[dbhdr->count - 1].address, employees[dbhdr->count - 1].hours);
+    //printf("%s:%s:%d\n",employees[dbhdr->count - 1].name, employees[dbhdr->count - 1].address, employees[dbhdr->count - 1].hours);
 
     return STATUS_SUCCESS;
 }
@@ -69,6 +129,11 @@ int output_file(int fd, struct dbheader_t *dbhdr, struct employee_t *employees) 
     dbhdr->filesize = htonl(sizeof(struct dbheader_t) + (sizeof(struct employee_t)*real_count));
     dbhdr->magic = htonl(dbhdr->magic);
     dbhdr->version = htons(dbhdr->version);
+
+    if(ftruncate(fd,ntohl(dbhdr->filesize)) != 0){
+        printf("ftuncate failed.\n");
+        return STATUS_ERROR;
+    }
 
     lseek(fd, 0, SEEK_SET);
 

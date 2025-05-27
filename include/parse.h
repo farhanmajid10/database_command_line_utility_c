@@ -16,11 +16,15 @@ struct employee_t {
 	unsigned int hours;
 };
 
+
+int employee_hour_change(struct dbheader_t *dbhdr, struct employee_t *employees, char *new_hours);
+int remove_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *removestring);
 int create_db_header(int fd, struct dbheader_t **headerOut);
 int validate_db_header(int fd, struct dbheader_t **headerOut);
 int read_employees(int fd, struct dbheader_t *, struct employee_t **employeesOut);
 int output_file(int fd, struct dbheader_t *, struct employee_t *employees);
 void list_employees(struct dbheader_t *dbhdr, struct employee_t *employees);
 int add_employee(struct dbheader_t *dbhdr, struct employee_t *employees, char *addstring);
+int search_employees(struct dbheader_t *dbhdr, struct employee_t *employees, char *removestring);
 
 #endif
